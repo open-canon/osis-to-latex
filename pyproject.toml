@@ -1,0 +1,108 @@
+[project]
+name = "osis-to-latex"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "fire==0.7.0",
+    "jinja2==3.1.6",
+    "pyosis==0.2.0",
+]
+license = {file = "LICENSE"}
+keywords = [
+    "bible study",
+    "bible tools",
+    "bible",
+    "data parsing",
+    "digital humanities",
+    "digital scripture",
+    "latex",
+    "open scripture",
+    "osis parser",
+    "osis",
+    "parser",
+    "pypi",
+    "python",
+    "religious texts",
+    "scripture analysis",
+    "scripture parser",
+    "scripture",
+    "text analytics",
+    "text processing",
+    "xml parsing",
+    "xml",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Religion",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python",
+    "Topic :: Religion",
+]
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools >= 61.0"]
+
+
+[tool.ruff]
+line-length = 120
+preview = true
+
+[tool.ruff.lint]
+ignore = ["D205", "F401", "PT009", "S101"]
+select = [
+    "ANN",
+    "D",
+    "E",
+    "F",
+    "FURB",
+    "I",
+    "N",
+    "PERF",
+    "PTH",
+    "RUF",
+    "UP",
+    "W",
+    "YTT",
+]
+
+
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.semantic_release]
+build_command = "python -m pip install build && python -m build"
+major_on_zero = false
+version_variables = ["osis_to_latex/__init__.py:__version__"]
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "build",
+    "chore",
+    "ci",
+    "docs",
+    "feat",
+    "fix",
+    "perf",
+    "refactor",
+    "style",
+    "test",
+]
+minor_tags = ["feat"]
+patch_tags = ["build", "fix", "perf"]
+
+[tool.setuptools]
+packages = ["osis_to_latex"]
+[tool.setuptools.dynamic]
+version = {attr = "osis_to_latex.__version__"}
+[tool.setuptools.package-data]
+osis_to_latex = ["*.tex", "*.jinja2", "*.cls"]
