@@ -3,12 +3,12 @@ import pydantic
 from typing import Sequence, TypeVar, Type
 T = TypeVar("T")
 
-# TODO: Signature lists should have new lines
+
 # Cover page needs its own page
 # Title page needs its own page
 # Testimonies should share
 
-# Verses shouldn't be indented
+
 
 # Both of these below are caused by https://github.com/tefra/xsdata-pydantic/issues/38
 # The small caps are all over the place in the Brief explanation about the Book of Mormon
