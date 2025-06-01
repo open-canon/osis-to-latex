@@ -80,6 +80,7 @@ select = [
 convention = "google"
 
 [tool.semantic_release]
+allow_zero_version = true
 build_command = "python -m pip install build && python -m build"
 major_on_zero = false
 version_variables = ["osis_to_latex/__init__.py:__version__"]
