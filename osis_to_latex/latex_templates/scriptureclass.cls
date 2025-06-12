@@ -111,21 +111,21 @@
 \newcommand{\vfn}[1]{%
   \refstepcounter{subfn}%
   \textsuperscript{\alph{subfn}}%
-  \begingroup
-    \ifnum\value{verse}=1
-        \ifnum\value{subfn}=1
+  \begingroup%
+    \ifnum\value{verse}=1%
+        \ifnum\value{subfn}=1%
             \renewcommand{\thefootnote}{\textbf{\small{\thechapter}}\,\arabic{verse}\alph{subfn}}%
-        \else
+        \else%
             \renewcommand{\thefootnote}{\phantom{\small{\thechapter}}\,\arabic{verse}\alph{subfn}}%
-        \fi
-    \else
+        \fi%
+    \else%
         \renewcommand{\thefootnote}{\phantom{\small{\thechapter}}\,\arabic{verse}\alph{subfn}}%
-    \fi
+    \fi%
     \renewcommand\@makefnmark{%
-      \hbox{\textsuperscript{\thefootnote}} %
+      \hbox{\textsuperscript{\thefootnote}}%
     }%
     \footnotetext{\hspace{0.5em}#1}%
-  \endgroup
+  \endgroup%
 }
 \makeatother
 

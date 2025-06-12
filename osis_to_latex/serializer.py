@@ -231,7 +231,7 @@ def pyosis_to_latex(osis_model: object | pydantic.BaseModel | str | None) -> str
         # CUSTOM DIVS DEFINED IN CHURCH_STUDY_TO_OSIS PACKAGE
         if osis_model.type_value == "x-figure":
             return (
-                r"\begin{figure}[h]"+"\n" + r"\centering" + "\n" 
+                r"\begin{figure}[ht]"+"\n" + r"\centering" + "\n" 
                 + children_content(osis_model.content) 
                 + r"\end{figure}"+"\n")
         if osis_model.type_value == "x-publish-info":
