@@ -121,12 +121,10 @@
     \else%
         \renewcommand{\thefootnote}{\phantom{\small{\thechapter}}\,\arabic{verse}\alph{subfn}}%
     \fi%
-    \renewcommand\@makefnmark{%
-      \hbox{\textsuperscript{\thefootnote}}%
-    }%
+    \renewcommand\@makefnmark{\hbox{\textsuperscript{\thefootnote}}}%
     \footnotetext{\hspace{0.5em}#1}%
   \endgroup%
-}
+\ignorespaces}
 \makeatother
 
 % Custom list environment to mimic OSIS <list>
