@@ -35,8 +35,35 @@ def find(contents: Sequence[object | T], type_: Type[T]) -> T | None:
             return content
     return None
 
+def header_titles(osis_model: object | pydantic.BaseModel) -> list[pyosis.generated.TitleCt]:
+    """Extract all titles that occur before the first non-title/non-head object."""
+    titles: list[pyosis.generated.TitleCt] = []
+    for obj in osis_model.content:
+        if isinstance(obj, pyosis.generated.TitleCt):
+            titles.append(obj)
+        elif isinstance(obj, pyosis.generated.HeadCt):
+            pass
+        else:
+            break
+    return titles
+
 def children_content(contents: Sequence[object | pydantic.BaseModel | str]) -> str:
         return "".join(pyosis_to_latex(content) for content in contents)
+
+def subtitle_latex(osis_model: pyosis.generated.TitleCt) -> str:
+    return (
+        "\n\n" 
+        + r"\begin{center}"
+        + "\n"
+        + r"\textsc{" 
+        + "\n"
+        + children_content(osis_model.content).strip() 
+        + "\n"
+        + r"}"
+        + "\n"
+        +r"\end{center}"
+        +"\n\n"
+    )
 
 def pyosis_to_latex(osis_model: object | pydantic.BaseModel | str | None) -> str:
     if osis_model is None:
@@ -52,6 +79,8 @@ def pyosis_to_latex(osis_model: object | pydantic.BaseModel | str | None) -> str
     if isinstance(osis_model, pyosis.generated.ReferenceCt):
         # TODO: Properly support cross references if the work is in the same LaTeX document or can be easily linked to.
         return children_content(osis_model.content)
+    if isinstance(osis_model, pyosis.generated.TitleCt):
+        return subtitle_latex(osis_model)
     if isinstance(osis_model, pyosis.generated.HiCt):
         if osis_model.type_value == pyosis.generated.OsisHi.ACROSTIC:
             raise NotImplementedError("Acrostics not currently supported for LaTeX.")
@@ -77,7 +106,14 @@ def pyosis_to_latex(osis_model: object | pydantic.BaseModel | str | None) -> str
             return r"\underline{" + children_content(osis_model.content) + "}"
         raise NotImplementedError("Non-standard Highlights not supported.")
     if isinstance(osis_model, pyosis.generated.ChapterCt) or isinstance(osis_model, pyosis.generated.DivCt) and osis_model.type_value == pyosis.generated.OsisDivs.CHAPTER:
-        return r"\chapter{}" +"\n\n"+ children_content(osis_model.content).strip() + "\n\n"
+        titles = [x for x in osis_model.content if isinstance(x,(pyosis.generated.HeadCt,))] + header_titles(osis_model)
+        chapter_contents = [x for x in osis_model.content if x not in titles]
+        # For reference see Psalm 47 or Psalm 48
+        title_latex = [subtitle_latex(title) for title in titles]
+        title_latex_joined = "\n\n".join(title_latex)
+        if title_latex:
+            title_latex_joined += "\n\n"
+        return r"\chapter{}" +"\n\n"+ title_latex_joined+children_content(chapter_contents).strip() + "\n\n"
     if isinstance(osis_model, pyosis.generated.PCt):
         return "\n\n" + children_content(osis_model.content) + "\n\n"
     if isinstance(osis_model, pyosis.generated.DivCt):
@@ -108,24 +144,39 @@ def pyosis_to_latex(osis_model: object | pydantic.BaseModel | str | None) -> str
             raise NotImplementedError(f"Unsupported div type: {osis_model}")
         if osis_model.type_value == pyosis.generated.OsisDivs.BOOK:
             head = find(osis_model.content, pyosis.generated.HeadCt)
-            title = find(osis_model.content, pyosis.generated.TitleCt)
-            book_contents = [x for x in osis_model.content if x not in (head, title)]
+            titles = header_titles(osis_model)
+                    
+            book_contents = [x for x in osis_model.content if x not in (head, *titles)]
             if head:
+                # TODO: Respect new line characters within heads
                 head_contents = children_content(head.content).strip()
             else:
                 raise NotImplementedError("Div Book without Head child is not supported.")
+
+            title_contents = [children_content(title.content).strip() for title in titles]
+            header = r"\book{" + head_contents +"}"+"{"+ " ".join(osis_model.osis_id) + "}\n" 
+            if title_contents:
+                for title_content in title_contents:
+                    header += r"\booksectiontitle{" + title_content + "}"
+
+
             first_chapter = find(book_contents, pyosis.generated.ChapterCt)
             if first_chapter is None:
-                raise NotImplementedError("Div Book without Verse child is not supported.")
+                return (
+                header + "\n"
+                +r"\begin{multicols}{2}" 
+                +"\n"
+                +children_content(book_contents)
+                + "\n\n" 
+                + r"\end{multicols}" 
+                + "\n\n"
+            )
 
             first_chapter_index = book_contents.index(first_chapter)
             before_chapters = book_contents[:first_chapter_index]
             after_chapters = book_contents[first_chapter_index:]
             
-            title_contents = children_content(title.content).strip() if title is not None else None
-            header = r"\book{" + head_contents +"}"+"{"+ " ".join(osis_model.osis_id) + "}\n" 
-            if title_contents:
-                header += r"\booksectiontitle{" + title_contents + "}"
+            
             return (
                 header + "\n"
                 + children_content(before_chapters) 
@@ -136,7 +187,36 @@ def pyosis_to_latex(osis_model: object | pydantic.BaseModel | str | None) -> str
                 + r"\end{multicols}" 
                 + "\n\n")
         if osis_model.type_value == pyosis.generated.OsisDivs.BOOK_GROUP:
-            raise NotImplementedError(f"Unsupported div type: {osis_model}")
+            head = find(osis_model.content, pyosis.generated.HeadCt)
+            titles = header_titles(osis_model)
+            book_group_contents = [x for x in osis_model.content if x not in (head, *titles)]
+            if head:
+                head_contents = children_content(head.content).strip()
+            else:
+                raise NotImplementedError("Div Book without Head child is not supported.")
+            
+            title_contents = [children_content(title.content).strip() for title in titles]
+
+            title_page_latex = (
+                r"\begin{center}"
+                + "\n" 
+                + head_contents
+                + "\n\n"
+                + "\n\n".join(title_contents)
+                + r"\end{center}"
+                +"\n" 
+            )
+
+            return (
+                r"\newpage" 
+                + "\n" 
+                + title_page_latex
+                +r"\pagebreak" 
+                + "\n"
+                + children_content(book_group_contents) 
+                + r"\newpage"
+                + "\n"
+            )
         if osis_model.type_value == pyosis.generated.OsisDivs.BRIDGE:
             raise NotImplementedError(f"Unsupported div type: {osis_model}")
         if osis_model.type_value == pyosis.generated.OsisDivs.CHAPTER:
@@ -328,7 +408,6 @@ def pyosis_to_latex(osis_model: object | pydantic.BaseModel | str | None) -> str
         return title_tex+document_begin+ front_matters + main_matters + document_end
     if isinstance(osis_model, pyosis.generated.OsisCt):
         return pyosis_to_latex(osis_model.osis_text)
-        
-        
+
 
     raise NotImplementedError(f"Encountered unknown OSIS object that cannot be serialized to LaTeX: {osis_model}")
