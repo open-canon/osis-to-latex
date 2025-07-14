@@ -38,6 +38,15 @@ def main(input_path: str | pathlib.Path, output_path: str | pathlib.Path) -> Non
     scripture_tex_name = "scripture.tex"
     output_file = output_path / scripture_tex_name
     output_file.write_text(tex)
+
+    # Copy all image files from input_path/'images' to output_path/'images'
+    input_images_dir = input_path.parent / 'images'
+    output_images_dir = output_path / 'images'
+    output_images_dir.mkdir(parents=True, exist_ok=True)
+    for img_file in input_images_dir.iterdir():
+        if img_file.is_file():
+            (output_images_dir / img_file.name).write_bytes(img_file.read_bytes())
+    
     
     subprocess.run(['latexmk', '-pdf', "-e", "\"$pdflatex='xelatex %O -interaction=nonstopmode %S'\"", scripture_tex_name, "-f"], check=True, cwd=output_path)
     

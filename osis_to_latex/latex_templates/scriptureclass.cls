@@ -27,6 +27,7 @@
 \RequirePackage{chngcntr}
 \RequirePackage{enumitem}  % For flexible list customization
 \RequirePackage{silence}
+\RequirePackage{graphicx}
 
 
 % === LAYOUT ===
@@ -147,3 +148,8 @@
 
 
 \WarningFilter{multicol}{I moved some lines to the next page}
+\WarningFilter{multicol}{Underfull \hbox (badness 10000) in paragraph}
+
+\newlength{\inlineimageheight}
+\settoheight{\inlineimageheight}{B}
+

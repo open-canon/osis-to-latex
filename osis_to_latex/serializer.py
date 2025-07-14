@@ -1,6 +1,8 @@
 import pyosis.generated
 import pydantic
 from typing import Sequence, TypeVar, Type
+import warnings
+import pathlib
 T = TypeVar("T")
 
 
@@ -316,7 +318,7 @@ def pyosis_to_latex(osis_model: object | pydantic.BaseModel | str | None) -> str
         # CUSTOM DIVS DEFINED IN CHURCH_STUDY_TO_OSIS PACKAGE
         if osis_model.type_value == "x-figure":
             return (
-                r"\begin{figure}[ht]"+"\n" + r"\centering" + "\n" 
+                r"\begin{figure}[htbp]"+"\n" + r"\centering" + "\n" 
                 + children_content(osis_model.content) 
                 + r"\end{figure}"+"\n")
         if osis_model.type_value == "x-publish-info":
@@ -345,25 +347,33 @@ def pyosis_to_latex(osis_model: object | pydantic.BaseModel | str | None) -> str
 
     if isinstance(osis_model, pyosis.generated.FigureCt):
         src = osis_model.src
+        size = osis_model.size
         captions = osis_model.caption
         caption_str = ""
         for caption in captions:
             caption_str += r"\caption{" + children_content(caption.content) + "}\n"
-        
 
-        settings = "["
+        settings_chunks:list[str] = []
+        if size == "inline":
+            settings_chunks.append(r"height=\inlineimageheight")
+            
         if osis_model.alt:
-            settings += "alt={" + escape_latex(osis_model.alt) + "}"
+            settings_chunks.append("alt={" + escape_latex(osis_model.alt) + "}")
 
-        settings += "]"
+
+        settings = "[" + ",".join(settings_chunks) + "]"
         if settings == "[]":
-            settings = ""
+            settings = r"[width=0.9\textwidth]"
 
         # TODO: Fix graphics from remote sources. Will likely require something custom in the class
-        graphics = ""
-        # graphics = r"\includegraphics" + settings + "{" + (src or "") + "}\n"
+        if not src or src.startswith("http:"):
+            graphics = ""
+            warnings.warn("Omitting graphic132s from remote source.")
+        else:
+            src_path = "images/" + pathlib.Path(src).name.strip()
+            graphics = r"\includegraphics" + settings + "{" + (src_path or "") + "}\n"
 
-        return (caption_str + graphics)
+        return (graphics + caption_str)
 
     if isinstance(osis_model, pyosis.generated.TableCt):
         head = children_content(osis_model.head.content) if osis_model.head else ""
@@ -397,7 +407,7 @@ def pyosis_to_latex(osis_model: object | pydantic.BaseModel | str | None) -> str
     if isinstance(osis_model, pyosis.generated.OsisTextCt):
         title = osis_model.osis_ref_work
         title_tex = r"\title{" + escape_latex(title) + "}\n"  + "\n\n"
-        document_begin = r"\begin{document}" + r"\maketitle"
+        document_begin = r"\begin{document}" + r"\maketitle" + "\n"
         document_end = r"\end{document}"
 
 
